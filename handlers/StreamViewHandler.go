@@ -3,51 +3,46 @@ package handlers
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"telepight/processors"
 )
 
 const (
-	StreamPath        = "/stream/"
+	StreamURLPath     = "/stream/"
+	streamTemplate    = "stream.gtpl"
 	streamURLTemplate = "http://%s.local/webcam/?action=stream"
 )
 
 type StreamPageData struct {
-	StreamSources []StreamSourceData
+	StreamSources []HostData
 }
 
-type StreamSourceData struct {
+type HostData struct {
 	DisplayText string
-	StreamURL   string
+	URL         string
 }
 
 func StreamViewHandler(t *template.Template, streamSources *processors.StreamSources) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !validatePath(w, r) {
+		if r.URL.Path != StreamURLPath {
+			http.NotFound(w, r)
 			return
 		}
 		pageData := generateStreamPage(streamSources)
-		err := t.ExecuteTemplate(w, "stream.gtpl", pageData)
+		err := t.ExecuteTemplate(w, streamTemplate, pageData)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("Error processing template=%s: %v", streamTemplate, err)
 		}
 	}
 }
 
-func validatePath(w http.ResponseWriter, r *http.Request) bool {
-	if r.URL.Path != StreamPath {
-		http.NotFound(w, r)
-		return false
-	}
-	return true
-}
-
 func generateStreamPage(streamSources *processors.StreamSources) StreamPageData {
-	var pageData []StreamSourceData
+	var pageData []HostData
 	for _, streamSource := range streamSources.Sources {
-		pageData = append(pageData, StreamSourceData{
+		pageData = append(pageData, HostData{
 			DisplayText: streamSource.Hostname,
-			StreamURL:   fmt.Sprintf(streamURLTemplate, streamSource.Hostname),
+			URL:         fmt.Sprintf(streamURLTemplate, streamSource.Hostname),
 		})
 	}
 	return StreamPageData{

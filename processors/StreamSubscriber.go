@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"telepight/utils"
 	"time"
-)
-
-const (
-	PrimaryHost = "zk-gatekeeper"
 )
 
 type StreamSources struct {
@@ -29,21 +25,22 @@ func (s *StreamSources) addStreamSource(newSource StreamSource) {
 			return // TODO add check for IP later, and override if IP is different
 		}
 	}
+	log.Printf("Accepting new subscription from host=%s", newSource.Hostname)
 	s.Sources = append(s.Sources, newSource)
 }
 
-func RequestSubscription() {
-	if IsPrimaryHost() {
+func RequestSubscription(primaryHost string) {
+	if utils.IsPrimaryHost(primaryHost) {
 		log.Println("This is the primary instance, no need to request subscription.")
 		return
 	}
 
-	host := GetHostName()
-	subscriptionURL := RequestSubscriptionURL(host)
+	host := utils.GetHostName()
+	subscriptionURL := RequestSubscriptionURL(primaryHost, host)
 	for {
 		resp, err := http.Get(subscriptionURL)
 		if err != nil {
-			log.Printf("Failed to request subscription from the primary host %s", PrimaryHost)
+			log.Fatalf("Failed to request subscription from the primary host %s", primaryHost)
 		}
 
 		log.Println(resp.Body) // TODO parse the response and populate local stream list
@@ -59,25 +56,6 @@ func AcceptSubscription(streamSources *StreamSources, streamChan chan StreamSour
 	}
 }
 
-//
-// Helper functions
-//
-
-func GetHostName() string {
-	host, exist := os.LookupEnv("HOSTNAME")
-	if !exist {
-		log.Fatal("HOSTNAME is not set!")
-	}
-	return host
-}
-
-func IsPrimaryHost() bool {
-	if PrimaryHost == GetHostName() {
-		return true
-	}
-	return false
-}
-
-func RequestSubscriptionURL(host string) string {
-	return fmt.Sprintf("http://%s.local/subscribe/?host=%s", PrimaryHost, host)
+func RequestSubscriptionURL(primaryHost, host string) string {
+	return fmt.Sprintf("http://%s.local/subscribe/?host=%s", primaryHost, host)
 }

@@ -15,11 +15,11 @@ import (
 var (
 	// config values
 	streamURL          = "http://zk-cam02.local/webcam/?action=snapshot"
-	frameDirName       = "frames"
+	framesDirName      = "frames"
 	frameFileNameLimit = 10 // fill frame filename up to this length with '0's
 	fps                = 1
 	duration           = 600 // in seconds
-	videoDirName       = "videos"
+	videosDirName      = "videos"
 
 	frameFetchFailureThreshold = 10
 	maxNumberOfVideos          = 36
@@ -41,12 +41,12 @@ func StartAutoRecording(basePath string) {
 	}
 
 	// init frame dir
-	frameDir := filepath.Join(basePath, frameDirName)
-	ensureDirExists(frameDir)
+	framesDir := filepath.Join(basePath, framesDirName)
+	ensureDirExists(framesDir)
 
 	// init video dir
-	videoDir := filepath.Join(basePath, videoDirName)
-	ensureDirExists(videoDir)
+	videosDir := filepath.Join(basePath, videosDirName)
+	ensureDirExists(videosDir)
 
 	// TODO start video cleaning process
 
@@ -57,7 +57,7 @@ func StartAutoRecording(basePath string) {
 	for {
 		prefix := getFramesPrefix(videoCounter)
 		if lastPrefix != prefix && frameCounter > 0 {
-			go StartEncodingVideo(lastPrefix, frameDir, videoDir)
+			go StartEncodingVideo(lastPrefix, framesDir, videosDir)
 			videoCounter = 0
 			frameCounter = 0
 			// need to reset the video counter since this is a new hour
@@ -65,7 +65,7 @@ func StartAutoRecording(basePath string) {
 			lastPrefix = prefix
 		}
 
-		tempDir := filepath.Join(frameDir, prefix)
+		tempDir := filepath.Join(framesDir, prefix)
 		if frameCounter == 0 {
 			ensureDirExists(tempDir)
 		}
@@ -78,7 +78,7 @@ func StartAutoRecording(basePath string) {
 		// time gap before next iteration
 		time.Sleep(time.Millisecond * time.Duration(frameGap))
 		if frameCounter >= totalFrames { // need to switch to new video
-			go StartEncodingVideo(lastPrefix, frameDir, videoDir)
+			go StartEncodingVideo(lastPrefix, framesDir, videosDir)
 			videoCounter++
 			frameCounter = 0
 			prefix = getFramesPrefix(videoCounter)
