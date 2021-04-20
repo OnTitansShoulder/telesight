@@ -1,5 +1,7 @@
 tmp
+mjpg-streamer
 telepight*
 notes.md
 frames
 videos
+*.service

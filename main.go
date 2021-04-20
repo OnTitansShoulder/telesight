@@ -16,13 +16,20 @@ func main() {
 
 	// load flags and configs
 	primaryHost := flag.String("m", "", "The primary server hostname.")
+	base := flag.String("b", "", "The basePath to save runtime buffer and images.")
 	isVideoSource := flag.Bool("s", false, "Whether this instance serves as a camera source.")
 	flag.Parse()
 
 	// load all the templates
-	basePath, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
+	var basePath string
+	var err error
+	if base != nil && len(*base) > 0 {
+		basePath = *base
+	} else {
+		basePath, err = filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	templates := templates.ParseAllTemplates(basePath)
 
@@ -54,5 +61,5 @@ func main() {
 	go processors.AcceptSubscription(&streamSources, streamChan)
 	go processors.StartAutoRecording(basePath)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8089", nil))
 }
