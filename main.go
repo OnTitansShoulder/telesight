@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"telepight/handlers"
-	"telepight/processors"
-	"telepight/templates"
-	"telepight/utils"
+	"telesight/handlers"
+	"telesight/processors"
+	"telesight/templates"
+	"telesight/utils"
 )
 
 func main() {

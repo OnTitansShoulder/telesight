@@ -1,4 +1,4 @@
-module telepight
+module telesight
 
 go 1.15
 

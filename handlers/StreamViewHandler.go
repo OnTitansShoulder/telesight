@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"telepight/processors"
+	"telesight/processors"
 )
 
 const (

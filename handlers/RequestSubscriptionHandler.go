@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"telepight/processors"
+	"telesight/processors"
 )
 
 const (

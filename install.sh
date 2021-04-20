@@ -30,24 +30,24 @@ cd $CWD || (echo "cd failed" && exit 1)
 STREAMER_BIN=$(which mjpg_streamer)
 [[ -x $STREAMER_BIN ]] || (echo "Failed to install mjpg_streamer" && exit 1)
 
-# build the source for telepight
+# build the source for telesight
 cd $CWD || (echo "cd failed" && exit 1)
 go install
-TELEPIGHT_BIN=$(which telepight)
-[[ -x $TELEPIGHT_BIN ]] || (echo "Failed to install telepight" && exit 1)
+TELESIGHT_BIN=$(which telesight)
+[[ -x $TELESIGHT_BIN ]] || (echo "Failed to install telesight" && exit 1)
 
 # generate the services files
-id -u telepight >> /dev/null || sudo useradd telepight
-TELEPIGHT_RUN_ROOT=/run/telepight
-sudo mkdir -p $TELEPIGHT_RUN_ROOT "$TELEPIGHT_RUN_ROOT/frames" $TELEPIGHT_RUN_ROOT/videos $TELEPIGHT_RUN_ROOT/templates
-sudo cp $CWD/templates/*.gtpl "$TELEPIGHT_RUN_ROOT/templates/"
-sudo cp $CWD/$STREAMER_ROOT/*.so $TELEPIGHT_RUN_ROOT
-sudo cp -r "$CWD/$STREAMER_ROOT/www" "$TELEPIGHT_RUN_ROOT/"
-sudo chown -R telepight:telepight $TELEPIGHT_RUN_ROOT
-cat > telepight.service <<EOF
+id -u telesight >> /dev/null || sudo useradd telesight
+TELESIGHT_RUN_ROOT=/run/telesight
+sudo mkdir -p $TELESIGHT_RUN_ROOT "$TELESIGHT_RUN_ROOT/frames" $TELESIGHT_RUN_ROOT/videos $TELESIGHT_RUN_ROOT/templates
+sudo cp $CWD/templates/*.gtpl "$TELESIGHT_RUN_ROOT/templates/"
+sudo cp $CWD/$STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
+sudo cp -r "$CWD/$STREAMER_ROOT/www" "$TELESIGHT_RUN_ROOT/"
+sudo chown -R telesight:telesight $TELESIGHT_RUN_ROOT
+cat > telesight.service <<EOF
 [Unit]
 Description=camera streaming portal and video viewing/recording service
-ConditionPathExists=$TELEPIGHT_RUN_ROOT
+ConditionPathExists=$TELESIGHT_RUN_ROOT
 
 [Service]
 User=root
@@ -56,10 +56,10 @@ RestartSec=5
 WatchdogSec=21600
 Nice=10
 
-ExecStartPre=/bin/chown -R telepight:telepight $TELEPIGHT_RUN_ROOT
-ExecStartPre=/bin/chmod -R 0755 $TELEPIGHT_RUN_ROOT
+ExecStartPre=/bin/chown -R telesight:telesight $TELESIGHT_RUN_ROOT
+ExecStartPre=/bin/chmod -R 0755 $TELESIGHT_RUN_ROOT
 
-ExecStart=$TELEPIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELEPIGHT_RUN_ROOT $STREAM_FLAG
+ExecStart=$TELESIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELESIGHT_RUN_ROOT $STREAM_FLAG
 
 [Install]
 WantedBy=multi-user.target
@@ -68,7 +68,7 @@ EOF
 cat > mjpg_streamer.service <<EOF
 [Unit]
 Description=webcam streaming service
-ConditionPathExists=$TELEPIGHT_RUN_ROOT
+ConditionPathExists=$TELESIGHT_RUN_ROOT
 
 [Service]
 User=root
@@ -76,9 +76,9 @@ Restart=always
 RestartSec=5
 WatchdogSec=21600
 Nice=10
-WorkingDirectory=$TELEPIGHT_RUN_ROOT
-ExecStartPre=/bin/chown -R telepight:telepight $TELEPIGHT_RUN_ROOT
-ExecStartPre=/bin/chmod -R 0755 $TELEPIGHT_RUN_ROOT
+WorkingDirectory=$TELESIGHT_RUN_ROOT
+ExecStartPre=/bin/chown -R telesight:telesight $TELESIGHT_RUN_ROOT
+ExecStartPre=/bin/chmod -R 0755 $TELESIGHT_RUN_ROOT
 
 ExecStart=$STREAMER_BIN -i 'input_uvc.so -r 640x360 -f 10' -o 'output_http.so'
 
@@ -86,7 +86,7 @@ ExecStart=$STREAMER_BIN -i 'input_uvc.so -r 640x360 -f 10' -o 'output_http.so'
 WantedBy=multi-user.target
 EOF
 
-sudo chmod 644 mjpg_streamer.service telepight.service
-sudo cp mjpg_streamer.service telepight.service /lib/systemd/system/
-sudo systemctl enable mjpg_streamer telepight
-sudo systemctl start mjpg_streamer telepight
+sudo chmod 644 mjpg_streamer.service telesight.service
+sudo cp mjpg_streamer.service telesight.service /lib/systemd/system/
+sudo systemctl enable mjpg_streamer telesight
+sudo systemctl start mjpg_streamer telesight

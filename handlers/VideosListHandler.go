@@ -8,8 +8,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"telepight/processors"
-	"telepight/utils"
+	"telesight/processors"
+	"telesight/utils"
 )
 
 const (
