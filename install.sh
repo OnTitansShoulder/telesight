@@ -15,8 +15,9 @@ sudo apt-get upgrade -y
 sudo apt-get install -y \
   cmake gcc g++ golang \
   ffmpeg \
-  libjpeg8-dev
-  
+  libjpeg8-dev \
+  haproxy
+
 # build the source for streaming
 CWD=$(pwd)
 STREAMER_ROOT=mjpg-streamer
@@ -32,7 +33,8 @@ STREAMER_BIN=$(which mjpg_streamer)
 
 # build the source for telesight
 cd $CWD || (echo "cd failed" && exit 1)
-go install
+go build
+sudo mv telesight /usr/local/bin/
 TELESIGHT_BIN=$(which telesight)
 [[ -x $TELESIGHT_BIN ]] || (echo "Failed to install telesight" && exit 1)
 
@@ -90,3 +92,27 @@ sudo chmod 644 mjpg_streamer.service telesight.service
 sudo cp mjpg_streamer.service telesight.service /lib/systemd/system/
 sudo systemctl enable mjpg_streamer telesight
 sudo systemctl start mjpg_streamer telesight
+
+# setup haproxy to route the traffic
+if [[ -e /etc/haproxy/haproxy.cfg.telesight.bak ]]; then
+  sudo cp /etc/haproxy/haproxy.cfg{.telesight.bak,}
+else
+  sudo cp /etc/haproxy/haproxy.cfg{,.telesight.bak}
+fi
+
+sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
+
+frontend public
+        bind :::80 v4v6
+        option forwardfor except 127.0.0.1
+        use_backend webcam if { path_beg /webcam/ }
+
+backend telesight
+        reqrep ^([^\ :]*)\ /(.*)     \1\ /\2
+        server telesight  127.0.0.1:8089
+
+backend webcam
+        reqrep ^([^\ :]*)\ /webcam/(.*)     \1\ /\2
+        server webcam1  127.0.0.1:8080
+EOF
+sudo service haproxy restart
