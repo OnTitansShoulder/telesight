@@ -35,7 +35,7 @@ function build_telesight() {
 function generate_telesight_service() {
   # generate the services files
   id -u telesight >> /dev/null || sudo useradd telesight
-  TELESIGHT_RUN_ROOT=/var/run/telesight
+  TELESIGHT_RUN_ROOT=/var/telesight
   sudo mkdir -p $TELESIGHT_RUN_ROOT "$TELESIGHT_RUN_ROOT/frames" $TELESIGHT_RUN_ROOT/videos $TELESIGHT_RUN_ROOT/templates
   sudo cp $CWD/templates/*.gtpl "$TELESIGHT_RUN_ROOT/templates/"
   sudo cp $STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
