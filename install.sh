@@ -143,8 +143,6 @@ if [[ $IS_FRESH_INSTALL == "y" || $IS_FRESH_INSTALL == "Y" ]]; then
   installPackages
   if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
     build_streamer
-    STREAMER_BIN=$(which mjpg_streamer)
-    [[ -x $STREAMER_BIN ]] || (echo "Failed to install mjpg_streamer" && exit 1)
   fi
   build_telesight
 fi
@@ -152,6 +150,10 @@ fi
 TELESIGHT_BIN=$(which telesight)
 [[ -x $TELESIGHT_BIN ]] || (echo "Failed to install telesight" && exit 1)
 
+if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
+  STREAMER_BIN=$(which mjpg_streamer)
+  [[ -x $STREAMER_BIN ]] || (echo "Failed to install mjpg_streamer" && exit 1)
+fi
 
 generate_telesight_service
 if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
