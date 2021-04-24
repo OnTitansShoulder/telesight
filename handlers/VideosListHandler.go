@@ -47,13 +47,13 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 		}
 		resp, err := http.Get(VideosURL(host[0]))
 		if err != nil {
-			log.Printf("Failed to request video list from host=%s: %v", host, err)
+			log.Printf("Failed to request video list from host=%s: %v\n", host, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Failed to read video list from host=%s: %v", host, err)
+			log.Printf("Failed to read video list from host=%s: %v\n", host, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -61,7 +61,7 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 		var videoFileNames []string
 		err = json.Unmarshal(body, &videoFileNames)
 		if err != nil {
-			log.Printf("Failed to unmarshall video list from host=%s: %v", host, err)
+			log.Printf("Failed to unmarshall video list from host=%s: %v\n", host, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -76,13 +76,13 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 func respondWithTemplate(t *template.Template, w http.ResponseWriter, data VideoListPageData) {
 	err := t.ExecuteTemplate(w, videolistTemplate, data)
 	if err != nil {
-		log.Printf("Error processing template=%s: %v", videolistTemplate, err)
+		log.Printf("Error processing template=%s: %v\n", videolistTemplate, err)
 	}
 }
 
 func VideosURL(host string) string {
 	if host == utils.GetHostName() {
-		return "http://localhost:8080/listvideos/"
+		return "http://localhost:8089/listvideos/"
 	}
 	return fmt.Sprintf(videosURLTemplate, host)
 }
@@ -92,7 +92,7 @@ func VideosListHandler(basePath string) http.HandlerFunc {
 		videosPath := filepath.Join(basePath, videoDirName)
 		files, err := ioutil.ReadDir(videosPath)
 		if err != nil {
-			log.Printf("Failed to read files from videosPath=%s: %v", videosPath, err)
+			log.Printf("Failed to read files from videosPath=%s: %v\n", videosPath, err)
 			fmt.Fprint(w, "[]")
 			return
 		}
@@ -102,7 +102,7 @@ func VideosListHandler(basePath string) http.HandlerFunc {
 		}
 		bytes, err := json.Marshal(fileNames)
 		if err != nil {
-			log.Printf("Failed to marshall fileNames into JSON")
+			log.Printf("Failed to marshall fileNames into JSON\n")
 			fmt.Fprint(w, "[]")
 			return
 		}

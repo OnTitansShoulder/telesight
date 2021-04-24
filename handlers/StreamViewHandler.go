@@ -32,7 +32,7 @@ func StreamViewHandler(t *template.Template, streamSources *processors.StreamSou
 		pageData := generateStreamPage(streamSources)
 		err := t.ExecuteTemplate(w, streamTemplate, pageData)
 		if err != nil {
-			log.Printf("Error processing template=%s: %v", streamTemplate, err)
+			log.Printf("Error processing template=%s: %v\n", streamTemplate, err)
 		}
 	}
 }

@@ -10,7 +10,7 @@ import (
 func DirMustExist(dirPath string) {
 	err := os.Mkdir(dirPath, 0755)
 	if err != nil && !os.IsExist(err) {
-		log.Fatalf("Error: Unable to create directory %s: %v", dirPath, err)
+		log.Fatalf("Error: Unable to create directory %s: %v\n", dirPath, err)
 	}
 }
 
@@ -27,7 +27,7 @@ func GetHostName() string {
 	}
 	output, err := exec.Command(path).Output()
 	if err != nil {
-		log.Fatalf("Failed to get hostname! Output: %s; Error: %v", output, err)
+		log.Fatalf("Failed to get hostname! Output: %s; Error: %v\n", output, err)
 	}
 	return strings.TrimSpace(string(output))
 }

@@ -25,7 +25,7 @@ func (s *StreamSources) addStreamSource(newSource StreamSource) {
 			return // TODO add check for IP later, and override if IP is different
 		}
 	}
-	log.Printf("Accepting new subscription from host=%s", newSource.Hostname)
+	log.Printf("Accepting new subscription from host=%s\n", newSource.Hostname)
 	s.Sources = append(s.Sources, newSource)
 }
 
@@ -40,7 +40,7 @@ func RequestSubscription(primaryHost string) {
 	for {
 		resp, err := http.Get(subscriptionURL)
 		if err != nil {
-			log.Fatalf("Failed to request subscription from the primary host %s", primaryHost)
+			log.Fatalf("Failed to request subscription from the primary host %s\n", primaryHost)
 		}
 
 		log.Println(resp.Body) // TODO parse the response and populate local stream list

@@ -59,7 +59,9 @@ func main() {
 	// start background routines
 	go processors.RequestSubscription(*primaryHost)
 	go processors.AcceptSubscription(&streamSources, streamChan)
-	go processors.StartAutoRecording(basePath)
+	if *isVideoSource {
+		go processors.StartAutoRecording(basePath)
+	}
 
 	log.Fatal(http.ListenAndServe(":8089", nil))
 }
