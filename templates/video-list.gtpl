@@ -14,9 +14,9 @@
                     <span class="fs-4">Watch Recorded Videos</span>
                 </a>
                 <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/stream/">Stream</a>
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/watch/">Watch</a>
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/videos/">Local Videos</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/stream/">Stream</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/watch/">Watch</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/videos/">Local Videos</a>
                 </nav>
             </header>
             <div style="display: flex;">
@@ -68,12 +68,12 @@ $('#pagination-container').pagination({
 function loadVideosFromHost(selectedHost) {
     var selected = document.getElementById("video-host-selection");
     if ( selected.value.length > 0 ) {
-        window.location.href="/watch/?host=" + selected.value;
+        window.location.href="/telesight/watch/?host=" + selected.value;
     }
 }
 function loadVideo(video) {
     var videoHtml = '<video style="width: 100%; border: solid" controls>';
-    videoHtml += '<source src="http://{{ .SelectedVideoSourceIP }}/videos/' + video + '" type="video/mp4"></video>';
+    videoHtml += '<source src="http://{{ .SelectedVideoSourceIP }}/telesight/videos/' + video + '" type="video/mp4"></video>';
 	$("#video-container").html(videoHtml);
 }
 </script>

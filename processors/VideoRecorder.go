@@ -15,7 +15,7 @@ import (
 
 var (
 	// config values
-	streamURL          = "http://localhost:8080/webcam/?action=snapshot"
+	streamURL          = "http://localhost:8080/?action=snapshot"
 	framesDirName      = "frames"
 	frameFileNameLimit = 10 // fill frame filename up to this length with '0's
 	fps                = 1
@@ -106,7 +106,7 @@ func StartEncodingVideo(prefix, srcDir, videosDir string) {
 		log.Printf("Failed encoding video from %s (try %d): %v: %s\n", framesDir, try, err, string(cmdOutput))
 	}
 	if try == videoEncodeRetryLimit {
-		log.Printf("Retry has exhausted for encoding video from %s", framesDir)
+		log.Printf("Retry has exhausted for encoding video from %s\n", framesDir)
 	} else {
 		log.Printf("Encoding video for %s was successful.\n", framesDir)
 	}

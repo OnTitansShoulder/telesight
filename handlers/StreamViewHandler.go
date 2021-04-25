@@ -23,6 +23,12 @@ type HostData struct {
 	URL         string
 }
 
+func StreamViewRedirectHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/telesight"+StreamURLPath, 301)
+	}
+}
+
 func StreamViewHandler(t *template.Template, streamSources *processors.StreamSources) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != StreamURLPath {

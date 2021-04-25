@@ -48,9 +48,9 @@
 					<span class="fs-4">Streaming From Cams</span>
 				</a>
 				<nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/stream/">Stream</a>
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/watch/">Watch</a>
-                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/videos/">Local Videos</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/stream/">Stream</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/watch/">Watch</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/telesight/videos/">Local Videos</a>
                 </nav>
 			</header>
 			<div style="display: flex;">

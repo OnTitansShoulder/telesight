@@ -61,5 +61,5 @@ func AcceptSubscription(streamSources *StreamSources, streamChan chan StreamSour
 }
 
 func RequestSubscriptionURL(primaryHost, host, ip string) string {
-	return fmt.Sprintf("http://%s.local/subscribe/?host=%s&ip=%s", primaryHost, host, ip)
+	return fmt.Sprintf("http://%s.local/telesight/subscribe/?host=%s&ip=%s", primaryHost, host, ip)
 }

@@ -38,9 +38,8 @@ function generate_telesight_service() {
   TELESIGHT_RUN_ROOT=/var/telesight
   sudo mkdir -p $TELESIGHT_RUN_ROOT "$TELESIGHT_RUN_ROOT/frames" $TELESIGHT_RUN_ROOT/videos $TELESIGHT_RUN_ROOT/templates
   sudo cp $CWD/templates/*.gtpl "$TELESIGHT_RUN_ROOT/templates/"
-  sudo cp $STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
-  sudo cp -r "$STREAMER_ROOT/www" "$TELESIGHT_RUN_ROOT/"
   sudo chown -R telesight:telesight $TELESIGHT_RUN_ROOT
+  sudo chmod -R 0755 $TELESIGHT_RUN_ROOT
   cat > telesight.service <<EOF
 [Unit]
 Description=camera streaming portal and video viewing/recording service
@@ -52,23 +51,37 @@ Restart=always
 RestartSec=5
 WatchdogSec=21600
 Nice=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=telesight
 
-ExecStartPre=/bin/chown -R telesight:telesight $TELESIGHT_RUN_ROOT
-ExecStartPre=/bin/chmod -R 0755 $TELESIGHT_RUN_ROOT
-
-ExecStart=$TELESIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELESIGHT_RUN_ROOT $STREAM_FLAG -r > /var/log/telesight.log
+ExecStart=$TELESIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELESIGHT_RUN_ROOT $STREAM_FLAG -r
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-  sudo chmod 644 telesight.service
+  cat > telesight.conf <<EOF
+:programname, startswith, "telesight" {
+  /var/log/telesight.log
+  stop
+}
+EOF
+
+  sudo chmod 644 telesight.service telesight.conf
+  sudo cp telesight.conf /etc/rsyslog.d/
   sudo cp telesight.service /lib/systemd/system/
   sudo systemctl enable telesight
-  sudo systemctl restart telesight
+  sudo systemctl restart telesight rsyslog
 }
 
 function generate_streamer_service() {
+  TELESIGHT_RUN_ROOT=/var/telesight
+  sudo mkdir -p $TELESIGHT_RUN_ROOT
+  sudo cp $STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
+  sudo cp -r "$STREAMER_ROOT/www" "$TELESIGHT_RUN_ROOT/"
+  sudo chown -R telesight:telesight $TELESIGHT_RUN_ROOT
+  sudo chmod -R 0755 $TELESIGHT_RUN_ROOT
   cat > mjpg_streamer.service <<EOF
 [Unit]
 Description=webcam streaming service
@@ -81,19 +94,28 @@ RestartSec=5
 WatchdogSec=21600
 Nice=10
 WorkingDirectory=$TELESIGHT_RUN_ROOT
-ExecStartPre=/bin/chown -R telesight:telesight $TELESIGHT_RUN_ROOT
-ExecStartPre=/bin/chmod -R 0755 $TELESIGHT_RUN_ROOT
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=mjpg_streamer
 
-ExecStart=$STREAMER_BIN -i 'input_uvc.so -r 640x360 -f 10' -o 'output_http.so' > /var/log/mjpg_streamer.log
+ExecStart=$STREAMER_BIN -i 'input_uvc.so -r 640x360 -f 10' -o 'output_http.so'
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-  sudo chmod 644 mjpg_streamer.service
+  cat > mjpg_streamer.conf <<EOF
+:programname, startswith, "mjpg_streamer" {
+  /var/log/mjpg_streamer.log
+  stop
+}
+EOF
+
+  sudo chmod 644 mjpg_streamer.service mjpg_streamer.conf
+  sudo cp mjpg_streamer.conf /etc/rsyslog.d/
   sudo cp mjpg_streamer.service /lib/systemd/system/
   sudo systemctl enable mjpg_streamer
-  sudo systemctl restart mjpg_streamer
+  sudo systemctl restart mjpg_streamer rsyslog
 }
 
 function update_haproxy_config() {
@@ -108,13 +130,19 @@ function update_haproxy_config() {
 frontend public
         bind :::80 v4v6
         option forwardfor except 127.0.0.1
+        use_backend telesight if { path_beg /telesight/ }
+EOF
+
+  if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
+    sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
         use_backend webcam if { path_beg /webcam/ }
-        use_backend telesight if { path_beg / }
+EOF
+  fi
+  sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
 
 backend telesight
-        reqrep ^([^\ :]*)\ /(.*)     \1\ /\2
+        reqrep ^([^\ :]*)\ /telesight/(.*)     \1\ /\2
         server telesight  127.0.0.1:8089
-
 EOF
   if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
   sudo tee -a /etc/haproxy/haproxy.cfg <<EOF

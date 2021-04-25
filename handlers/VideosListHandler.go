@@ -9,14 +9,13 @@ import (
 	"net/http"
 	"path/filepath"
 	"telesight/processors"
-	"telesight/utils"
 )
 
 const (
 	VideoListURLPath  = "/watch/"
 	videolistTemplate = "video-list.gtpl"
 	videoDirName      = "videos"
-	videosURLTemplate = "http://%s/listvideos/"
+	videosURLTemplate = "http://%s/telesight/listvideos/"
 )
 
 type VideoListPageData struct {
@@ -48,7 +47,7 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 		}
 		host := hostParam[0]
 		ip := streamSources.Sources[host].IP
-		resp, err := http.Get(VideosURL(host, ip))
+		resp, err := http.Get(fmt.Sprintf(videosURLTemplate, ip))
 		if err != nil {
 			log.Printf("Failed to request video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,13 +81,6 @@ func respondWithTemplate(t *template.Template, w http.ResponseWriter, data Video
 	if err != nil {
 		log.Printf("Error processing template=%s: %v\n", videolistTemplate, err)
 	}
-}
-
-func VideosURL(host, ip string) string {
-	if host == utils.GetHostName() {
-		return "http://localhost:8089/listvideos/"
-	}
-	return fmt.Sprintf(videosURLTemplate, ip)
 }
 
 func VideosListHandler(basePath string) http.HandlerFunc {

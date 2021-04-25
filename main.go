@@ -64,9 +64,10 @@ func main() {
 	http.HandleFunc("/stream/", handlers.StreamViewHandler(templates, &streamSources))
 	http.HandleFunc("/watch/", handlers.VideosWatchHandler(templates, &streamSources))
 	// api handlers
-	http.HandleFunc("/", handlers.LandingViewHandler(templates))
+	http.HandleFunc("/health", handlers.LandingViewHandler(templates))
 	http.HandleFunc("/listvideos/", handlers.VideosListHandler(basePath))
 	http.HandleFunc("/subscribe/", handlers.RequestSubscriptionHandler(streamChan))
+	http.HandleFunc("/", handlers.StreamViewRedirectHandler())
 	// serve static video files
 	http.Handle("/videos/", http.FileServer(http.Dir(basePath)))
 
