@@ -73,6 +73,9 @@ func main() {
 
 	// start background routines
 	go processors.AcceptSubscription(&streamSources, streamChan)
+	if utils.IsPrimaryHost(*primaryHost) {
+		go processors.CheckHeartBeats(&streamSources)
+	}
 	if *subscribePrimaryHost {
 		go processors.RequestSubscription(*primaryHost, ipAddr)
 	}

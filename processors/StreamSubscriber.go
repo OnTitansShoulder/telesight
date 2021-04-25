@@ -48,10 +48,10 @@ func RequestSubscription(primaryHost, ip string) {
 	subscriptionURL := RequestSubscriptionURL(primaryHost, host, ip)
 	for {
 		resp, err := http.Get(subscriptionURL)
-		defer resp.Body.Close()
 		if err != nil {
 			log.Fatalf("Failed to request subscription from the primary host %s\n", primaryHost)
 		}
+		defer resp.Body.Close()
 
 		// TODO parse the response and populate local stream list
 
