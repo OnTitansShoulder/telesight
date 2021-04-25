@@ -22,9 +22,14 @@ func RequestSubscriptionHandler(streamChan chan processors.StreamSource) http.Ha
 		if len(host) == 0 || len(host[0]) == 0 {
 			http.Error(w, "must provide a host param", http.StatusBadRequest)
 		}
+		ip := params["ip"]
+		if len(ip) == 0 || len(ip[0]) == 0 {
+			http.Error(w, "must provide an ip param", http.StatusBadRequest)
+		}
 
 		streamSource := processors.StreamSource{
 			Hostname: host[0],
+			IP:       ip[0],
 		}
 		streamChan <- streamSource
 

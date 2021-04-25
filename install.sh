@@ -56,7 +56,7 @@ Nice=10
 ExecStartPre=/bin/chown -R telesight:telesight $TELESIGHT_RUN_ROOT
 ExecStartPre=/bin/chmod -R 0755 $TELESIGHT_RUN_ROOT
 
-ExecStart=$TELESIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELESIGHT_RUN_ROOT $STREAM_FLAG > /var/log/telesight.log
+ExecStart=$TELESIGHT_BIN -m $PRIMARY_HOSTNAME -b $TELESIGHT_RUN_ROOT $STREAM_FLAG -r > /var/log/telesight.log
 
 [Install]
 WantedBy=multi-user.target
@@ -155,8 +155,8 @@ if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
   [[ -x $STREAMER_BIN ]] || (echo "Failed to install mjpg_streamer" && exit 1)
 fi
 
-generate_telesight_service
 if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
   generate_streamer_service
 fi
+generate_telesight_service
 update_haproxy_config

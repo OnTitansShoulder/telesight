@@ -9,7 +9,7 @@ import (
 )
 
 type StreamSources struct {
-	Sources []StreamSource
+	Sources map[string]StreamSource
 }
 
 type StreamSource struct {
@@ -20,23 +20,27 @@ type StreamSource struct {
 
 func (s *StreamSources) addStreamSource(newSource StreamSource) {
 	// check for duplicated source
-	for _, source := range s.Sources {
-		if source.Hostname == newSource.Hostname {
-			return // TODO add check for IP later, and override if IP is different
+	if existing, ok := s.Sources[newSource.Hostname]; ok {
+		if existing.IP == newSource.IP {
+			return
 		}
 	}
 	log.Printf("Accepting new subscription from host=%s\n", newSource.Hostname)
-	s.Sources = append(s.Sources, newSource)
+	s.Sources[newSource.Hostname] = newSource
 }
 
-func RequestSubscription(primaryHost string) {
+func RequestSubscription(primaryHost, ip string) {
 	if utils.IsPrimaryHost(primaryHost) {
 		log.Println("This is the primary instance, no need to request subscription.")
 		return
 	}
 
+	if len(primaryHost) == 0 {
+		log.Println("Primary host is not specified. Stop subscribing to it.")
+	}
+
 	host := utils.GetHostName()
-	subscriptionURL := RequestSubscriptionURL(primaryHost, host)
+	subscriptionURL := RequestSubscriptionURL(primaryHost, host, ip)
 	for {
 		resp, err := http.Get(subscriptionURL)
 		if err != nil {
@@ -56,6 +60,6 @@ func AcceptSubscription(streamSources *StreamSources, streamChan chan StreamSour
 	}
 }
 
-func RequestSubscriptionURL(primaryHost, host string) string {
-	return fmt.Sprintf("http://%s.local/subscribe/?host=%s", primaryHost, host)
+func RequestSubscriptionURL(primaryHost, host, ip string) string {
+	return fmt.Sprintf("http://%s.local/subscribe/?host=%s&ip=%s", primaryHost, host, ip)
 }

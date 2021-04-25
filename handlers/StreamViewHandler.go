@@ -11,7 +11,7 @@ import (
 const (
 	StreamURLPath     = "/stream/"
 	streamTemplate    = "stream.gtpl"
-	streamURLTemplate = "http://%s.local/webcam/?action=stream"
+	streamURLTemplate = "http://%s/webcam/?action=stream"
 )
 
 type StreamPageData struct {
@@ -42,7 +42,7 @@ func generateStreamPage(streamSources *processors.StreamSources) StreamPageData 
 	for _, streamSource := range streamSources.Sources {
 		pageData = append(pageData, HostData{
 			DisplayText: streamSource.Hostname,
-			URL:         fmt.Sprintf(streamURLTemplate, streamSource.Hostname),
+			URL:         fmt.Sprintf(streamURLTemplate, streamSource.IP),
 		})
 	}
 	return StreamPageData{

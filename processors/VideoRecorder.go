@@ -15,7 +15,7 @@ import (
 
 var (
 	// config values
-	streamURL          = "http://zk-cam02.local/webcam/?action=snapshot"
+	streamURL          = "http://localhost:8080/webcam/?action=snapshot"
 	framesDirName      = "frames"
 	frameFileNameLimit = 10 // fill frame filename up to this length with '0's
 	fps                = 1
@@ -93,9 +93,9 @@ func StartEncodingVideo(prefix, srcDir, videosDir string) {
 	outputVideo := filepath.Join(videosDir, fmt.Sprintf("%s.mp4", prefix))
 	ffmpegCmd := getFFmpegCommand()
 	ffmpegArgs := []string{"-framerate", "4", "-i", filepath.Join(framesDir, "%"+strconv.Itoa(frameFileNameLimit)+"d.jpg"), "-c:v", "libx264", "-pix_fmt", "yuv420p", outputVideo}
-	err := exec.Command(ffmpegCmd, ffmpegArgs...).Run()
+	cmdOutput, err := exec.Command(ffmpegCmd, ffmpegArgs...).CombinedOutput()
 	if err != nil {
-		log.Fatalf("Failed encoding video from %s: %v\n", framesDir, err)
+		log.Fatalf("Failed encoding video from %s: %v: %s\n", framesDir, err, string(cmdOutput))
 	}
 	log.Printf("Encoding video for %s was successful.\n", framesDir)
 }

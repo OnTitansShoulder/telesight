@@ -11,8 +11,13 @@
         <div class="col-lg-8 mx-auto p-3 py-md-5">
             <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
                 <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-                  <span class="fs-4">Watch Recorded Videos</span>
+                    <span class="fs-4">Watch Recorded Videos</span>
                 </a>
+                <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/stream/">Stream</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/watch/">Watch</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/videos/">Local Videos</a>
+                </nav>
             </header>
             <div style="display: flex;">
 				<h3>Select a video source:</h3>
@@ -68,7 +73,7 @@ function loadVideosFromHost(selectedHost) {
 }
 function loadVideo(video) {
     var videoHtml = '<video style="width: 100%; border: solid" controls>';
-    videoHtml += '<source src="/videos/' + video + '" type="video/mp4"></video>';
+    videoHtml += '<source src="http://{{ .SelectedVideoSourceIP }}/videos/' + video + '" type="video/mp4"></video>';
 	$("#video-container").html(videoHtml);
 }
 </script>

@@ -45,8 +45,13 @@
 		<div class="col-lg-8 mx-auto p-3 py-md-5">
 			<header class="d-flex align-items-center pb-3 mb-5 border-bottom">
 				<a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-				<span class="fs-4">Streaming From Cams</span>
+					<span class="fs-4">Streaming From Cams</span>
 				</a>
+				<nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/stream/">Stream</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/watch/">Watch</a>
+                    <a class="me-3 py-2 text-dark text-decoration-none btn btn-light" href="/videos/">Local Videos</a>
+                </nav>
 			</header>
 			<div style="display: flex;">
 				<h3>Select a stream source:</h3>

@@ -10,6 +10,7 @@ import (
 	"telesight/processors"
 	"telesight/templates"
 	"telesight/utils"
+	"time"
 )
 
 func main() {
@@ -18,7 +19,18 @@ func main() {
 	primaryHost := flag.String("m", "", "The primary server hostname.")
 	base := flag.String("b", "", "The basePath to save runtime buffer and images.")
 	isVideoSource := flag.Bool("s", false, "Whether this instance serves as a camera source.")
+	subscribePrimaryHost := flag.Bool("r", false, "Whether this instance should report to primary instance.")
+	warmUpSeconds := flag.Int("w", 0, "Warm up seconds for starting up mjpg_streamer")
 	flag.Parse()
+
+	ipAddr := utils.GetIpAddr()
+
+	if *isVideoSource {
+		if *warmUpSeconds > 0 {
+			log.Printf("Sleep %d seconds before starting up...\n", *warmUpSeconds)
+			time.Sleep(time.Duration(*warmUpSeconds) * time.Second)
+		}
+	}
 
 	// load all the templates
 	var basePath string
@@ -34,11 +46,13 @@ func main() {
 	templates := templates.ParseAllTemplates(basePath)
 
 	// shared state
-	var sources []processors.StreamSource
+	sources := make(map[string]processors.StreamSource)
 	if *isVideoSource {
-		sources = append(sources, processors.StreamSource{
-			Hostname: utils.GetHostName(),
-		})
+		host := utils.GetHostName()
+		sources[host] = processors.StreamSource{
+			Hostname: host,
+			IP:       ipAddr,
+		}
 	}
 	streamSources := processors.StreamSources{
 		Sources: sources,
@@ -57,8 +71,10 @@ func main() {
 	http.Handle("/videos/", http.FileServer(http.Dir(basePath)))
 
 	// start background routines
-	go processors.RequestSubscription(*primaryHost)
 	go processors.AcceptSubscription(&streamSources, streamChan)
+	if *subscribePrimaryHost {
+		go processors.RequestSubscription(*primaryHost, ipAddr)
+	}
 	if *isVideoSource {
 		go processors.StartAutoRecording(basePath)
 	}

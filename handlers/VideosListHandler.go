@@ -16,12 +16,13 @@ const (
 	VideoListURLPath  = "/watch/"
 	videolistTemplate = "video-list.gtpl"
 	videoDirName      = "videos"
-	videosURLTemplate = "http://%s.local/listvideos/"
+	videosURLTemplate = "http://%s/listvideos/"
 )
 
 type VideoListPageData struct {
-	VideoSources []HostData
-	Videos       []string
+	VideoSources          []HostData
+	SelectedVideoSourceIP string
+	Videos                []string
 }
 
 func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSources) http.HandlerFunc {
@@ -37,23 +38,25 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 			})
 		}
 		params := r.URL.Query()
-		host := params["host"]
-		if len(host) == 0 || len(host[0]) == 0 {
+		hostParam := params["host"]
+		if len(hostParam) == 0 || len(hostParam[0]) == 0 {
 			respondWithTemplate(t, w, VideoListPageData{
 				VideoSources: videoSources,
 				Videos:       []string{},
 			})
 			return
 		}
-		resp, err := http.Get(VideosURL(host[0]))
+		host := hostParam[0]
+		ip := streamSources.Sources[host].IP
+		resp, err := http.Get(VideosURL(host, ip))
 		if err != nil {
-			log.Printf("Failed to request video list from host=%s: %v\n", host, err)
+			log.Printf("Failed to request video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("Failed to read video list from host=%s: %v\n", host, err)
+			log.Printf("Failed to read video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -61,14 +64,15 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 		var videoFileNames []string
 		err = json.Unmarshal(body, &videoFileNames)
 		if err != nil {
-			log.Printf("Failed to unmarshall video list from host=%s: %v\n", host, err)
+			log.Printf("Failed to unmarshall video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		respondWithTemplate(t, w, VideoListPageData{
-			VideoSources: videoSources,
-			Videos:       videoFileNames,
+			VideoSources:          videoSources,
+			SelectedVideoSourceIP: ip,
+			Videos:                videoFileNames,
 		})
 	}
 }
@@ -80,11 +84,11 @@ func respondWithTemplate(t *template.Template, w http.ResponseWriter, data Video
 	}
 }
 
-func VideosURL(host string) string {
+func VideosURL(host, ip string) string {
 	if host == utils.GetHostName() {
 		return "http://localhost:8089/listvideos/"
 	}
-	return fmt.Sprintf(videosURLTemplate, host)
+	return fmt.Sprintf(videosURLTemplate, ip)
 }
 
 func VideosListHandler(basePath string) http.HandlerFunc {
