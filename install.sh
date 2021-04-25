@@ -13,10 +13,12 @@ function installPackages() {
 
 function build_streamer() {
   # build the source for streaming
-  git clone https://github.com/jacksonliam/mjpg-streamer.git streamer-tmp
+  if [[ ! -d $STREAMER_ROOT ]]; then
+    git clone https://github.com/jacksonliam/mjpg-streamer.git streamer-tmp
+    mv streamer-tmp/mjpg-streamer-experimental $STREAMER_ROOT
+    rm -rf streamer-tmp
+  fi
 
-  mv streamer-tmp/mjpg-streamer-experimental $STREAMER_ROOT
-  rm -rf streamer-tmp
   cd $STREAMER_ROOT || (echo "cd failed" && exit 1)
   make
   sudo make install
@@ -125,13 +127,13 @@ function getSupportedVideoFormat() {
   if [[ -n $(echo $VIDEO_FORMATS | grep 'mjpeg') ]]; then
     SUPPORT_MJPG=true
     MJPG_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
-    getResolution $MJPG_RESOLUTIONS
+    getResolution "$MJPG_RESOLUTIONS"
     MJPG_RESOLUTION=$RESOLUTION
   fi
   if [[ -n $(echo $VIDEO_FORMATS | grep 'yuyv') ]]; then
     SUPPORT_YUV=true
     YUV_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
-    getResolution $YUV_RESOLUTIONS
+    getResolution "$YUV_RESOLUTIONS"
     YUV_RESOLUTION=$RESOLUTION
   fi
   if [[ $SUPPORT_MJPG == 'true' ]]; then
