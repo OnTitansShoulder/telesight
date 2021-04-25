@@ -76,6 +76,8 @@ EOF
 }
 
 function generate_streamer_service() {
+  getSupportedVideoFormat
+
   TELESIGHT_RUN_ROOT=/var/telesight
   sudo mkdir -p $TELESIGHT_RUN_ROOT
   sudo cp $STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
@@ -98,7 +100,7 @@ StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=mjpg_streamer
 
-ExecStart=$STREAMER_BIN -i 'input_uvc.so -r 640x360 -f 10' -o 'output_http.so'
+ExecStart=$STREAMER_BIN -i 'input_uvc.so -r $RESOLUTION -f 10 $FORMAT_FLAG' -o 'output_http.so'
 
 [Install]
 WantedBy=multi-user.target
@@ -116,6 +118,27 @@ EOF
   sudo cp mjpg_streamer.service /lib/systemd/system/
   sudo systemctl enable mjpg_streamer
   sudo systemctl restart mjpg_streamer rsyslog
+}
+
+function getSupportedVideoFormat() {
+  VIDEO_FORMATS=$(ffmpeg -f v4l2 -list_formats all -i /dev/video0 2>&1 | grep 'v4l2')
+  if [[ -n $(echo $VIDEO_FORMATS | grep 'mjpeg') ]]; then
+    SUPPORT_MJPG=true
+    MJPG_RESOLUTION=$(echo $VIDEO_FORMATS | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}' | cut -d' ' -f 1)
+  fi
+  if [[ -n $(echo $VIDEO_FORMATS | grep 'yuyv') ]]; then
+    SUPPORT_YUV=true
+    YUV_RESOLUTION=$(echo $VIDEO_FORMATS | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}' | cut -d' ' -f 1)
+  fi
+  if [[ $SUPPORT_MJPG == 'true' ]]; then
+    FORMAT_FLAG=
+    RESOLUTION=$MJPG_RESOLUTION
+  elif [[ $SUPPORT_YUV == 'true' ]]; then
+    FORMAT_FLAG="-y yuv"
+    RESOLUTION=$YUV_RESOLUTION
+  else
+    echo "No supported video format found from the cam /dev/video0" && exit 1
+  fi
 }
 
 function update_haproxy_config() {
