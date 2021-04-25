@@ -28,6 +28,9 @@ var (
 	// derived
 	frameGap    = 1000 / fps
 	totalFrames = fps * duration
+
+	// video encoding retry
+	videoEncodeRetryLimit = 5
 )
 
 // StartAutoRecording calls the local stream URL and saves
@@ -90,14 +93,23 @@ func StartEncodingVideo(prefix, srcDir, videosDir string) {
 	framesDir := filepath.Join(srcDir, prefix)
 	defer postEncodingCleanup(framesDir, videosDir)
 
-	outputVideo := filepath.Join(videosDir, fmt.Sprintf("%s.mp4", prefix))
-	ffmpegCmd := getFFmpegCommand()
-	ffmpegArgs := []string{"-framerate", "4", "-i", filepath.Join(framesDir, "%"+strconv.Itoa(frameFileNameLimit)+"d.jpg"), "-c:v", "libx264", "-pix_fmt", "yuv420p", outputVideo}
-	cmdOutput, err := exec.Command(ffmpegCmd, ffmpegArgs...).CombinedOutput()
-	if err != nil {
-		log.Fatalf("Failed encoding video from %s: %v: %s\n", framesDir, err, string(cmdOutput))
+	try := 0
+	for try < videoEncodeRetryLimit {
+		try++
+		outputVideo := filepath.Join(videosDir, fmt.Sprintf("%s.mp4", prefix))
+		ffmpegCmd := getFFmpegCommand()
+		ffmpegArgs := []string{"-framerate", "4", "-i", filepath.Join(framesDir, "%"+strconv.Itoa(frameFileNameLimit)+"d.jpg"), "-c:v", "libx264", "-pix_fmt", "yuv420p", outputVideo}
+		cmdOutput, err := exec.Command(ffmpegCmd, ffmpegArgs...).CombinedOutput()
+		if err == nil {
+			break
+		}
+		log.Printf("Failed encoding video from %s (try %d): %v: %s\n", framesDir, try, err, string(cmdOutput))
 	}
-	log.Printf("Encoding video for %s was successful.\n", framesDir)
+	if try == videoEncodeRetryLimit {
+		log.Printf("Retry has exhausted for encoding video from %s", framesDir)
+	} else {
+		log.Printf("Encoding video for %s was successful.\n", framesDir)
+	}
 }
 
 func postEncodingCleanup(framesDir, videosDir string) {
