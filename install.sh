@@ -149,7 +149,7 @@ function getResolution() {
   RESOLUTIONS=$1
   if [[ -n $(echo $RESOLUTIONS | grep '640x360') ]]; then
     RESOLUTION='640x360'
-  elif [[ $(echo $RESOLUTIONS | grep '640x480') ]]; then
+  elif [[ -n $(echo $RESOLUTIONS | grep '640x480') ]]; then
     RESOLUTION='640x480'
   else
     RESOLUTION=$(echo $RESOLUTIONS | cut -d' ' -f 1)
