@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const (
+	heartBeatURLTemplate    = "http://%s/telesight/health/"
+	subscriptionURLTemplate = "http://%s.local/telesight/subscribe/?host=%s&ip=%s"
+)
+
 type StreamSources struct {
 	Sources map[string]StreamSource
 }
@@ -43,12 +48,29 @@ func RequestSubscription(primaryHost, ip string) {
 	subscriptionURL := RequestSubscriptionURL(primaryHost, host, ip)
 	for {
 		resp, err := http.Get(subscriptionURL)
+		defer resp.Body.Close()
 		if err != nil {
 			log.Fatalf("Failed to request subscription from the primary host %s\n", primaryHost)
 		}
 
-		log.Println(resp.Body) // TODO parse the response and populate local stream list
+		// TODO parse the response and populate local stream list
 
+		time.Sleep(time.Minute)
+	}
+}
+
+func CheckHeartBeats(streamSources *StreamSources) {
+	for {
+		newSources := make(map[string]StreamSource)
+		for _, source := range streamSources.Sources {
+			_, err := http.Get(HeatBeatURL(source.IP))
+			if err != nil {
+				log.Printf("host=%s ip=%s failed the heart beat check, removing it from the stream list", source.Hostname, source.IP)
+				continue
+			}
+			newSources[source.Hostname] = source
+		}
+		streamSources.Sources = newSources
 		time.Sleep(time.Minute)
 	}
 }
@@ -60,6 +82,10 @@ func AcceptSubscription(streamSources *StreamSources, streamChan chan StreamSour
 	}
 }
 
+func HeatBeatURL(ip string) string {
+	return fmt.Sprintf(heartBeatURLTemplate, ip)
+}
+
 func RequestSubscriptionURL(primaryHost, host, ip string) string {
-	return fmt.Sprintf("http://%s.local/telesight/subscribe/?host=%s&ip=%s", primaryHost, host, ip)
+	return fmt.Sprintf(subscriptionURLTemplate, primaryHost, host, ip)
 }
