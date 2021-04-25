@@ -124,11 +124,15 @@ function getSupportedVideoFormat() {
   VIDEO_FORMATS=$(ffmpeg -f v4l2 -list_formats all -i /dev/video0 2>&1 | grep 'v4l2')
   if [[ -n $(echo $VIDEO_FORMATS | grep 'mjpeg') ]]; then
     SUPPORT_MJPG=true
-    MJPG_RESOLUTION=$(echo $VIDEO_FORMATS | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}' | cut -d' ' -f 1)
+    MJPG_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
+    getResolution $MJPG_RESOLUTIONS
+    MJPG_RESOLUTION=$RESOLUTION
   fi
   if [[ -n $(echo $VIDEO_FORMATS | grep 'yuyv') ]]; then
     SUPPORT_YUV=true
-    YUV_RESOLUTION=$(echo $VIDEO_FORMATS | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}' | cut -d' ' -f 1)
+    YUV_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
+    getResolution $YUV_RESOLUTIONS
+    YUV_RESOLUTION=$RESOLUTION
   fi
   if [[ $SUPPORT_MJPG == 'true' ]]; then
     FORMAT_FLAG=
@@ -138,6 +142,17 @@ function getSupportedVideoFormat() {
     RESOLUTION=$YUV_RESOLUTION
   else
     echo "No supported video format found from the cam /dev/video0" && exit 1
+  fi
+}
+
+function getResolution() {
+  RESOLUTIONS=$1
+  if [[ -n $(echo $RESOLUTIONS | grep '640x360') ]]; then
+    RESOLUTION='640x360'
+  elif [[ $(echo $RESOLUTIONS | grep '640x480') ]]; then
+    RESOLUTION='640x480'
+  else
+    RESOLUTION=$(echo $RESOLUTIONS | cut -d' ' -f 1)
   fi
 }
 
