@@ -46,7 +46,7 @@
 <script>
 $('#pagination-container').pagination({
     dataSource: {{ .Videos }},
-    pageSize: 6,
+    pageSize: 20,
     callback: function(data, pagination) {
         var dataHtml = '<table class="table table-striped">\
         <thead>\

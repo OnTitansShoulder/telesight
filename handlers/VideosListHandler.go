@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"telesight/processors"
+	"telesight/utils"
 )
 
 const (
@@ -66,6 +67,11 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 			log.Printf("Failed to unmarshall video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		}
+
+		if len(videoFileNames) > 0 {
+			// display the files in reverse-chronological order
+			utils.ReverseAny(videoFileNames)
 		}
 
 		respondWithTemplate(t, w, VideoListPageData{
