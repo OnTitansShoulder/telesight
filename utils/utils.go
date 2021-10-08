@@ -7,11 +7,12 @@ import (
 	"os/exec"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 )
 
 const (
-	machineIpRegex = `^192.168.1.\d{1,3}$`
+	machineIpRegex = `^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$`
 )
 
 func DirMustExist(dirPath string) {
@@ -40,37 +41,58 @@ func GetHostName() string {
 }
 
 func GetIpAddr() string {
+	ip_addrs := getValidIpAddrs()
+	if len(ip_addrs) == 0 {
+		log.Fatalln("Unable to find this machine's ip address, the network might be down.")
+	}
+	sort.Strings(ip_addrs)
+	return ip_addrs[0]
+}
+
+func getValidIpAddrs() (ip_addrs []string) {
 	ip, exist := os.LookupEnv("IP_ADDR")
 	if exist {
-		return ip
-	}
-	ipRegex := regexp.MustCompile(machineIpRegex)
-	ifaces, _ := net.Interfaces()
-	// handle err
-	for _, i := range ifaces {
-		addrs, _ := i.Addrs()
-		// handle err
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
+		ip_addrs = append(ip_addrs, ip)
+	} else {
+		ipRegex := regexp.MustCompile(machineIpRegex)
+		ifaces, err := net.Interfaces()
+		if err != nil {
+			log.Fatal("Unable to get the Network interfaces")
+		}
+		for _, i := range ifaces {
+			addrs, err := i.Addrs()
+			if err != nil {
+				log.Fatalf("Unable to get the Network addresses from interface %v", i)
 			}
-			// process IP address
-			if ipRegex.MatchString(ip.String()) {
-				return ip.String()
+			for _, addr := range addrs {
+				var ip net.IP
+				switch v := addr.(type) {
+				case *net.IPNet:
+					ip = v.IP
+				case *net.IPAddr:
+					ip = v.IP
+				}
+				ip_string := ip.String()
+				// process IP address
+				if ipRegex.MatchString(ip_string) {
+					if ip_string != "127.0.0.1" {
+						ip_addrs = append(ip_addrs, ip_string)
+					}
+				}
 			}
 		}
 	}
-	log.Fatalln("Unable to find this machine's ip address, the network might be down.")
-	return ""
+	return ip_addrs
 }
 
-func IsPrimaryHost(hostname string) bool {
-	if strings.Contains(hostname, GetHostName()) {
+func IsPrimaryHost(target string) bool {
+	if strings.Contains(target, GetHostName()) {
 		return true
+	}
+	for _, ip_addr := range getValidIpAddrs() {
+		if target == ip_addr {
+			return true
+		}
 	}
 	return false
 }

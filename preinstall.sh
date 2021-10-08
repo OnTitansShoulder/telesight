@@ -11,8 +11,8 @@ sudo apt-get install -y \
     haproxy \
     libjpeg8-dev
 
-# pull down jacksonliam/mjpg-streamer and build from source
-git pull https://github.com/jacksonliam/mjpg-streamer.git && \
+# pull down mjpg-streamer (forked from jacksonliam) and build from source
+git pull https://github.com/OnTitansShoulder/mjpg-streamer && \
     cd mjpg-streamer && \
     mv mjpg-streamer-experimental/* ./
     make && sudo make install

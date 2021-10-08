@@ -1,13 +1,14 @@
-default: build
+default: install
 
-prebuild:
-	bash ./preinstall.sh
-
-build:
-	go build ./...
-
-install: build
-	go install ./...
+install:
+	bash ./install.sh
 
 clean:
 	rm -rf telesight
+
+start:
+	bash ./start.sh
+
+stop:
+	bash ./stop.sh
+
