@@ -1,5 +1,19 @@
 #!/bin/bash
 
+function fresh_raspi_checklist() {
+  echo
+  echo "Is this a fresh installed Raspberry Pi? > (y/n) " FRESH_PI
+
+  if [[ $FRESH_PI == "Y" || $FRESH_PI == "y" ]]; then
+    echo "Plase take care of following items before proceeding and run this script again ..."
+    echo
+    echo "[] Run ' sudo nano /etc/default/keyboard ' and update 'XKBLAYOUT' to 'us' (if you are using US keyboard layout)"
+    echo "[] If this device does not have ethernet access, configure the wireless Internet connection"
+    echo "[] Verify valid Internet access by running ' ping www.google.com -c 5 '"
+  fi
+  echo
+}
+
 function set_hostname() {
   OLD_HOSTNAME=$(hostname)
   echo
@@ -252,6 +266,9 @@ EOF
   # now start the routing service
   sudo systemctl restart haproxy
 }
+
+# print prerequist checklist if necessary
+fresh_raspi_checklist
 
 # check if we are changing hostname
 set_hostname
