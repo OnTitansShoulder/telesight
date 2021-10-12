@@ -16,20 +16,20 @@ function build_streamer() {
   # build the source for streaming
   if [[ ! -d $STREAMER_ROOT ]]; then
     git clone https://github.com/OnTitansShoulder/mjpg-streamer.git streamer-tmp
-    mv streamer-tmp/mjpg-streamer-experimental $STREAMER_ROOT
+    mv streamer-tmp/mjpg-streamer-experimental "$STREAMER_ROOT"
     rm -rf streamer-tmp
   fi
 
-  cd $STREAMER_ROOT || ( echo "cd failed" && exit 1 )
+  cd "$STREAMER_ROOT" || ( echo "cd failed" && exit 1 )
   make
   sudo make install
-  cd $CWD || ( echo "cd failed" && exit 1 )
+  cd "$CWD" || ( echo "cd failed" && exit 1 )
   [[ -x $(which mjpg_streamer) ]] || ( echo "Failed to build/install mjpg_streamer" && exit 1 )
 }
 
 function build_telesight() {
   # build the source for telesight
-  cd $CWD || ( echo "cd failed" && exit 1 )
+  cd "$CWD" || ( echo "cd failed" && exit 1 )
   go build
   sudo mv telesight /usr/local/bin/
   [[ -x $(which telesight) ]] || ( echo "Failed to install telesight" && exit 1 )
@@ -40,7 +40,7 @@ function generate_telesight_service() {
   id -u telesight >> /dev/null || sudo useradd telesight
   TELESIGHT_RUN_ROOT=/var/telesight
   sudo mkdir -p $TELESIGHT_RUN_ROOT "$TELESIGHT_RUN_ROOT/frames" $TELESIGHT_RUN_ROOT/videos $TELESIGHT_RUN_ROOT/templates
-  sudo cp $CWD/templates/*.gtpl "$TELESIGHT_RUN_ROOT/templates/"
+  sudo cp "$CWD"/templates/*.gtpl "$TELESIGHT_RUN_ROOT/templates/"
   sudo chown -R telesight:telesight $TELESIGHT_RUN_ROOT
   sudo chmod -R 0755 $TELESIGHT_RUN_ROOT
   cat > telesight.service <<EOF
@@ -83,7 +83,7 @@ function generate_streamer_service() {
 
   TELESIGHT_RUN_ROOT=/var/telesight
   sudo mkdir -p $TELESIGHT_RUN_ROOT
-  sudo cp $STREAMER_ROOT/*.so $TELESIGHT_RUN_ROOT
+  sudo cp "$STREAMER_ROOT"/*.so $TELESIGHT_RUN_ROOT
   sudo cp -r "$STREAMER_ROOT/www" "$TELESIGHT_RUN_ROOT/"
   sudo chown -R telesight:telesight $TELESIGHT_RUN_ROOT
   sudo chmod -R 0755 $TELESIGHT_RUN_ROOT
@@ -125,15 +125,15 @@ EOF
 
 function getSupportedVideoFormat() {
   VIDEO_FORMATS=$(ffmpeg -f v4l2 -list_formats all -i /dev/video0 2>&1 | grep 'v4l2')
-  if [[ -n $(echo $VIDEO_FORMATS | grep 'mjpeg') ]]; then
+  if [[ -n $(echo "$VIDEO_FORMATS" | grep 'mjpeg') ]]; then
     SUPPORT_MJPG=true
-    MJPG_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
+    MJPG_RESOLUTIONS=$(echo "$VIDEO_FORMATS" | grep 'mjpeg' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
     getResolution "$MJPG_RESOLUTIONS"
     MJPG_RESOLUTION=$RESOLUTION
   fi
-  if [[ -n $(echo $VIDEO_FORMATS | grep 'yuyv') ]]; then
+  if [[ -n $(echo "$VIDEO_FORMATS" | grep 'yuyv') ]]; then
     SUPPORT_YUV=true
-    YUV_RESOLUTIONS=$(echo $VIDEO_FORMATS | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
+    YUV_RESOLUTIONS=$(echo "$VIDEO_FORMATS" | grep 'yuyv' | rev | cut -d':' -f 1 | rev | awk '{$1=$1;print}')
     getResolution "$YUV_RESOLUTIONS"
     YUV_RESOLUTION=$RESOLUTION
   fi
@@ -150,16 +150,20 @@ function getSupportedVideoFormat() {
 
 function getResolution() {
   RESOLUTIONS=$1
-  if [[ -n $(echo $RESOLUTIONS | grep '640x360') ]]; then
+  if [[ -n $(echo "$RESOLUTIONS" | grep '640x360') ]]; then
     RESOLUTION='640x360'
-  elif [[ -n $(echo $RESOLUTIONS | grep '640x480') ]]; then
+  elif [[ -n $(echo "$RESOLUTIONS" | grep '640x480') ]]; then
     RESOLUTION='640x480'
   else
-    RESOLUTION=$(echo $RESOLUTIONS | cut -d' ' -f 1)
+    RESOLUTION=$(echo "$RESOLUTIONS" | cut -d' ' -f 1)
   fi
 }
 
 function update_haproxy_config() {
+  haproxy_bin=$(which haproxy)
+  if [[ -z "$haproxy_bin" ]]; then
+    echo "haproxy is not installed!" && exit 1
+  fi
   # setup haproxy to route the traffic
   # if there is a telesight.bak file, this is the second time running this function
   # restore the backup to avoid double writing things
@@ -169,6 +173,9 @@ function update_haproxy_config() {
     sudo cp /etc/haproxy/haproxy.cfg{,.telesight.bak}
   fi
 
+  haproxy_major_version=$(dpkg -s haproxy | grep -e "Version" | cut -d' ' -f2 | cut -d'.' -f1)
+
+  # now add the routing for the frontend UI
   sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
 frontend public
         bind :::80 v4v6
@@ -176,29 +183,55 @@ frontend public
         use_backend telesight if { path_beg /telesight/ }
 EOF
 
+  # add routing to webcam if streaming is enabled
   if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
     sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
         use_backend webcam if { path_beg /webcam/ }
 EOF
   fi
-  sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
+
+  # add routing backend to telesight and replace-uri config (version-specific syntax)
+  if [[ $haproxy_major_version -lt 2 ]]; then
+    sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
+
+backend telesight
+        reqrep ^([^\ :]*)\ /(.*)     \1\ /\2
+        server telesight  127.0.0.1:8089
+EOF
+  else
+    sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
 
 backend telesight
         http-request replace-uri ^/telesight/(.*) /\1
         server telesight  127.0.0.1:8089
 EOF
+  fi
+
+  # add routing backend to webcam stream and replace-uri config (version-specific syntax)
   if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
-  sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
+
+    if [[ $haproxy_major_version -lt 2 ]]; then
+      sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
+backend webcam
+        reqrep ^([^\ :]*)\ /webcam/(.*)     \1\ /\2
+        server webcam1  127.0.0.1:8080
+EOF
+    else
+      sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
 backend webcam
         http-request replace-uri ^/webcam/(.*) /\1
         server webcam1  127.0.0.1:8080
 EOF
+    fi
+
   fi
+
+  # now start the routing service
   sudo systemctl restart haproxy
 }
 
 # collect necessary info upfront
-read -p "Is this the first time running this script on this host (y/N) > " IS_FRESH_INSTALL
+read -rp "Is this the first time running this script on this host (y/N) > " IS_FRESH_INSTALL
 
 echo
 echo "======[NOTE][IMPORTANT]======"
@@ -208,7 +241,7 @@ echo "============================="
 echo
 
 echo "Now enter the primary machine's IP address "
-read -p "or press enter to use current machine as primary > " PRIMARY_HOST
+read -rp "or press enter to use current machine as primary > " PRIMARY_HOST
 CURRENT_HOST=$(hostname -I | awk '{print $1}')
 [[ -n $PRIMARY_HOST ]] || PRIMARY_HOST=$CURRENT_HOST
 
@@ -224,11 +257,11 @@ echo "When you are setting up other camera hosts, be sure to enter this IP addre
 echo "============================="
 echo
 
-read -p "Does this instance have a webcam and will be serving a camera stream (y/N) > " IS_STREAMING
+read -rp "Does this instance have a webcam and will be serving a camera stream (y/N) > " IS_STREAMING
 if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
   STREAM_FLAG="-s"
 
-  read -p "Have you plugged in your webcam to this device? If not it is a good time to do so now. Press enter to procceed > "
+  read -rp "Have you plugged in your webcam to this device? If not it is a good time to do so now. Press enter to procceed > "
 fi
 
 
