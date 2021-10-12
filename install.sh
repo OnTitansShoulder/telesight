@@ -23,14 +23,14 @@ function set_hostname() {
 
   if [[ $UPDATE_HOSTNAME == "Y" || $UPDATE_HOSTNAME == "y" ]]; then
     read -rp "What should be the new hostname? > " NEW_HOSTNAME
-  fi
 
-  if [[ ! $NEW_HOSTNAME =~ [\d\w]+[\d\w\.]*\.[\d\w]+ ]]; then
-    echo "Setting $NEW_HOSTNAME as new hostname ..."
-    sudo hostnamectl --transient set-hostname "$NEW_HOSTNAME"
-    sudo hostnamectl --static set-hostname "$NEW_HOSTNAME"
-    sudo hostnamectl --pretty set-hostname "$NEW_HOSTNAME"
-    sudo sed -i s/"$OLD_HOSTNAME"/"$NEW_HOSTNAME"/g /etc/hosts
+    if [[ ! $NEW_HOSTNAME =~ [\d\w]+[\d\w\.]*\.[\d\w]+ ]]; then
+      echo "Setting $NEW_HOSTNAME as new hostname ..."
+      sudo hostnamectl --transient set-hostname "$NEW_HOSTNAME"
+      sudo hostnamectl --static set-hostname "$NEW_HOSTNAME"
+      sudo hostnamectl --pretty set-hostname "$NEW_HOSTNAME"
+      sudo sed -i s/"$OLD_HOSTNAME"/"$NEW_HOSTNAME"/g /etc/hosts
+    fi
   fi
 
   echo
