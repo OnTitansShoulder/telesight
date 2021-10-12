@@ -1,5 +1,27 @@
 #!/bin/bash
 
+function set_hostname() {
+  OLD_HOSTNAME=$(hostname)
+  echo
+  echo "Currently this device hostname is $OLD_HOSTNAME"
+  echo "Change your device hostname to make sure it is easily identifiable in a multi-camera setup."
+  read -rp "Would you like to change this host's hostname? (y/n) > " UPDATE_HOSTNAME
+
+  if [[ $UPDATE_HOSTNAME == "Y" || $UPDATE_HOSTNAME == "y" ]]; then
+    read -rp "What should be the new hostname? > " NEW_HOSTNAME
+  fi
+
+  if [[ ! $NEW_HOSTNAME =~ [\d\w]+[\d\w\.]*\.[\d\w]+ ]]; then
+    echo "Setting $NEW_HOSTNAME as new hostname ..."
+    sudo hostnamectl --transient set-hostname "$NEW_HOSTNAME"
+    sudo hostnamectl --static set-hostname "$NEW_HOSTNAME"
+    sudo hostnamectl --pretty set-hostname "$NEW_HOSTNAME"
+    sudo sed -i s/"$OLD_HOSTNAME"/"$NEW_HOSTNAME"/g /etc/hosts
+  fi
+
+  echo
+}
+
 function installPackages() {
   # install prerequisite packages
   echo
@@ -10,6 +32,7 @@ function installPackages() {
   if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
     sudo apt-get install -y ffmpeg libjpeg8-dev
   fi
+  echo
 }
 
 function build_streamer() {
@@ -230,8 +253,11 @@ EOF
   sudo systemctl restart haproxy
 }
 
+# check if we are changing hostname
+set_hostname
+
 # collect necessary info upfront
-read -rp "Is this the first time running this script on this host (y/N) > " IS_FRESH_INSTALL
+read -rp "Is this the first time running this script on this host (y/n) > " IS_FRESH_INSTALL
 
 echo
 echo "======[NOTE][IMPORTANT]======"
@@ -257,7 +283,7 @@ echo "When you are setting up other camera hosts, be sure to enter this IP addre
 echo "============================="
 echo
 
-read -rp "Does this instance have a webcam and will be serving a camera stream (y/N) > " IS_STREAMING
+read -rp "Does this instance have a webcam and will be serving a camera stream (y/n) > " IS_STREAMING
 if [[ $IS_STREAMING == "y" || $IS_STREAMING == "Y" ]]; then
   STREAM_FLAG="-s"
 
