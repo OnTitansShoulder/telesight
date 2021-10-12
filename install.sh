@@ -195,7 +195,7 @@ EOF
     sudo tee -a /etc/haproxy/haproxy.cfg <<EOF
 
 backend telesight
-        reqrep ^([^\ :]*)\ /(.*)     \1\ /\2
+        reqrep ^([^\ :]*)\ /telesight/(.*)     \1\ /\2
         server telesight  127.0.0.1:8089
 EOF
   else
