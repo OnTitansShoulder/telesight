@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# Script for automatic setup of telesight program and the streaming program
+#
+# Currently supports Ubuntu and Debian OS, running on other OS is not currently supported
+#
+# Copyright (C) 2020-2021 Zhongkai Liu <jpzrcodek@gmail.com>
+# Based on
+#   https://github.com/jacksonliam/mjpg-streamer
+#   https://github.com/FFmpeg/FFmpeg
+#
 
 function fresh_raspi_checklist() {
   echo
@@ -8,7 +18,7 @@ function fresh_raspi_checklist() {
     echo "Plase take care of following items before proceeding and run this script again ..."
     echo
     echo "[] Run ' sudo nano /etc/default/keyboard ' and update 'XKBLAYOUT' to 'us' (if you are using US keyboard layout)"
-    echo "[] If this device does not have ethernet access, configure the wireless Internet connection"
+    echo "[] If this device does not have wired ethernet access, configure the wireless Internet connection. (See guide in extras directory)"
     echo "[] Verify valid Internet access by running ' ping www.google.com -c 5 '"
   fi
   echo

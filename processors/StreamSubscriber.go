@@ -10,7 +10,7 @@ import (
 
 const (
 	heartBeatURLTemplate    = "http://%s/telesight/health/"
-	subscriptionURLTemplate = "http://%s.local/telesight/subscribe/?host=%s&ip=%s"
+	subscriptionURLTemplate = "http://%s/telesight/subscribe/?host=%s&ip=%s"
 )
 
 type StreamSources struct {
