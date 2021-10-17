@@ -17,6 +17,20 @@ function validate_ip {
 if [[ $NEW_STATIC_IP =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
     if validate_ip "$NEW_STATIC_IP"; then
         echo "Setting $NEW_STATIC_IP as new static ip ..."
+        if [[ -f /etc/dhcpcd.conf.telesight.bak ]]; then
+            sudo cp /etc/dhcpcd.conf{.telesight.bak,}
+        elif [[ -f /etc/dhcpcd.conf ]]; then
+            sudo cp /etc/dhcpcd.conf{,.telesight.bak}
+        fi
+
+        sudo tee -a /etc/dhcpcd.conf > /dev/null <<EOF
+
+# static profile
+interface eth0
+static ip_address=$NEW_STATIC_IP
+static routers=192.168.1.1
+static domain_name_servers=192.168.1.1
+EOF
     fi
 else
     echo "invalid ip address entered! ($NEW_STATIC_IP)"
