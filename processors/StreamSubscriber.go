@@ -55,7 +55,7 @@ func RequestSubscription(primaryHost, ip string) {
 
 		// TODO parse the response and populate local stream list
 
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 15)
 	}
 }
 
@@ -63,11 +63,13 @@ func CheckHeartBeats(streamSources *StreamSources) {
 	for {
 		newSources := make(map[string]StreamSource)
 		for _, source := range streamSources.Sources {
-			_, err := http.Get(HeatBeatURL(source.IP))
+			resp, err := http.Get(HeatBeatURL(source.IP))
 			if err != nil {
 				log.Printf("host=%s ip=%s failed the heart beat check, removing it from the stream list", source.Hostname, source.IP)
 				continue
 			}
+			defer resp.Body.Close()
+
 			newSources[source.Hostname] = source
 		}
 		streamSources.Sources = newSources

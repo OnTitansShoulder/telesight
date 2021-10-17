@@ -12,7 +12,7 @@
 
 function fresh_raspi_checklist() {
   echo
-  echo "Is this a fresh installed Raspberry Pi? > (y/n) " FRESH_PI
+  read -rp "Is this a fresh installed Raspberry Pi? > (y/n) " FRESH_PI
 
   if [[ $FRESH_PI == "Y" || $FRESH_PI == "y" ]]; then
     echo "Plase take care of following items before proceeding and run this script again ..."
@@ -32,14 +32,8 @@ function set_hostname() {
   read -rp "Would you like to change this host's hostname? (y/n) > " UPDATE_HOSTNAME
 
   if [[ $UPDATE_HOSTNAME == "Y" || $UPDATE_HOSTNAME == "y" ]]; then
-    read -rp "What should be the new hostname? > " NEW_HOSTNAME
-
-    if [[ ! $NEW_HOSTNAME =~ [\d\w]+[\d\w\.]*\.[\d\w]+ ]]; then
-      echo "Setting $NEW_HOSTNAME as new hostname ..."
-      sudo hostnamectl --transient set-hostname "$NEW_HOSTNAME"
-      sudo hostnamectl --static set-hostname "$NEW_HOSTNAME"
-      sudo hostnamectl --pretty set-hostname "$NEW_HOSTNAME"
-      sudo sed -i s/"$OLD_HOSTNAME"/"$NEW_HOSTNAME"/g /etc/hosts
+    if ! bash "$(dirname "$0")"/set_hostname.sh; then
+      exit 1
     fi
   fi
 
