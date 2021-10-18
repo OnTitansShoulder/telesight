@@ -60,6 +60,7 @@ func main() {
 	streamChan := make(chan processors.StreamSource)
 	defer close(streamChan)
 
+	http.DefaultClient.Timeout = time.Minute
 	// view handlers
 	http.HandleFunc("/stream/", handlers.StreamViewHandler(templates, &streamSources))
 	http.HandleFunc("/watch/", handlers.VideosWatchHandler(templates, &streamSources))

@@ -238,7 +238,7 @@ func get(url string) (int, []byte, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	return resp.StatusCode, body, err
 }

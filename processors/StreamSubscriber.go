@@ -51,7 +51,7 @@ func RequestSubscription(primaryHost, ip string) {
 		if err != nil {
 			log.Fatalf("Failed to request subscription from the primary host %s\n", primaryHost)
 		}
-		defer resp.Body.Close()
+		resp.Body.Close()
 
 		// TODO parse the response and populate local stream list
 
@@ -68,7 +68,7 @@ func CheckHeartBeats(streamSources *StreamSources) {
 				log.Printf("host=%s ip=%s failed the heart beat check, removing it from the stream list", source.Hostname, source.IP)
 				continue
 			}
-			defer resp.Body.Close()
+			resp.Body.Close()
 
 			newSources[source.Hostname] = source
 		}

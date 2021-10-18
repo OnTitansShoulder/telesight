@@ -54,13 +54,13 @@ func VideosWatchHandler(t *template.Template, streamSources *processors.StreamSo
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Printf("Failed to read video list from host=%s ip=%s: %v\n", host, ip, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer resp.Body.Close()
 		var videoFileNames []string
 		err = json.Unmarshal(body, &videoFileNames)
 		if err != nil {
