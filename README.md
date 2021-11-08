@@ -6,7 +6,7 @@ It is intended for setting up a system of cameras with the ability to stream whi
 
 Ideally you want to have several computing devices such as raspberry pis with some webcams supporting motion JPEG (mJEPG). A VPN need to be installed on one of the device and serve as the gateway to access your camera system.
 
-Currently this program only supports Ubuntu and Debian OS.
+Currently this program only supports Ubuntu and Debian-based OS such as Raspbian.
 
 ## Install
 

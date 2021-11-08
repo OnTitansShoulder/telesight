@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ECHO_URL=$1
+while true; do
+  curl "$ECHO_URL" -s -o /dev/null > /dev/null 2>&1
+  sleep 60 # rest for 60 seconds
+done
